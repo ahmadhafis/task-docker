@@ -1,0 +1,70 @@
+# compose name
+name: my-wise-word-compose
+
+# tell compose to create this all services
+services:
+  # backend app service section
+  backend:
+    container_name: golang_container
+    # set container system environment
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+    # build with given Dockerfile 
+    build:
+      dockerfile: Dockerfile
+    # environment file
+    env_file:
+      - .env
+    # port to expose <HOST_PORT>:<CONTAINER_PORT>
+    ports:
+      - 8080:80
+    # restart policy, The policy always restarts the container until its removal
+    # https://github.com/compose-spec/compose-spec/blob/master/spec.md#restart
+    restart: always
+    # container will waiting postgresdb until condition service is healthy (indicate via healthcheck)
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    # container network
+    networks:
+      - net_my_compose_ahmadhafis
+
+  # database service name postgresdb
+  postgresdb:
+    # image to pull and use
+    image: postgres:latest
+    container_name: postgres_container
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+      - DATABASE_HOST=${DB_HOST}
+    env_file:
+      - .env
+    ports:
+      - '5435:5432'
+    # map persistent data stores
+    volumes:
+      - vol_my_compose_ahmadhafis:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - net_my_compose_ahmadhafis
+    # indicator container is healty
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+# Volume for persistent postgres db data
+volumes:
+  vol_my_compose_ahmadhafis:
+
+# Networks to be created to facilitate communication between containers
+networks:
+  net_my_compose_ahmadhafis:
+    driver: bridge
