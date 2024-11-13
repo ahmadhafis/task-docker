@@ -84,7 +84,7 @@ func connectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	_, err = db.Exec("INSERT INTO indrabayu_access_log (timestamp) VALUES ($1)", time.Now())
+	_, err = db.Exec("INSERT INTO ahmadhafis_access_log (timestamp) VALUES ($1)", time.Now())
 	if err != nil {
 		log.Printf("Failed to insert data: %v", err)
 		fmt.Fprintf(w, "<h1>Failed to insert data</h1><p>Error: %v</p>", err)
